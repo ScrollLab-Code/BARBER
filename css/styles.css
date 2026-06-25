@@ -926,8 +926,45 @@ button { cursor: pointer; }
 
   .nav-links.active { right: 0; }
 
-  .hero { padding-bottom: 15%; }
-  .hero-title { font-size: clamp(2.8rem, 12vw, 4.5rem); }
+  .hero {
+    height: auto;
+    min-height: auto;
+    padding: 120px 0 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: top center;
+    z-index: -2;
+  }
+
+  .hero-overlay {
+    background: rgba(245, 242, 235, 0.85);
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 180px; /* Da espacio para que el logo del fondo respire */
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
 
   .about-grid {
     grid-template-columns: 1fr;
@@ -986,7 +1023,10 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 480px) {
-  .hero-title { font-size: 2.5rem; }
+  .hero-content {
+    padding-top: 140px;
+  }
+  .hero-title { font-size: 2rem; }
   .gallery-grid { grid-template-columns: 1fr; grid-auto-rows: 200px; }
   .section-header .heading-lg { font-size: 2rem; }
 }
