@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Barbería Imperio — Tu barbería de confianza en Picún Leufú, Neuquén. Cortes, fades, barba y cejas. Reservá tu turno por WhatsApp.">
+    <meta name="keywords" content="barbería, corte de pelo, barba, fade, degradado, picún leufú, neuquén, imperio">
+    <meta name="author" content="Barbería Imperio">
+    
+    <meta property="og:title" content="Barbería Imperio — Picún Leufú">
+    <meta property="og:description" content="Donde el estilo se convierte en arte. Reservá tu turno.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero.png">
+    
+    <title>Barbería Imperio — Picún Leufú, Neuquén</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- ======== NAVBAR ======== -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="#hero" class="nav-logo">
+                <img src="assets/logo.png" alt="Barbería Imperio" class="logo-img">
+            </a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#about" class="nav-link">Nosotros</a></li>
+                <li><a href="#services" class="nav-link">Servicios</a></li>
+                <li><a href="#gallery" class="nav-link">Trabajos</a></li>
+                <li><a href="#team" class="nav-link">Equipo</a></li>
+                <li><a href="#pricing" class="nav-link">Precios</a></li>
+                <li><a href="#contact" class="nav-link">Contacto</a></li>
+                <li>
+                    <a href="#booking-section" class="nav-link nav-cta btn-trigger-booking">Reservar</a>
+                </li>
+            </ul>
+            <button class="menu-toggle" id="menu-toggle" aria-label="Menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ======== HERO ======== -->
+    <section id="hero" class="hero">
+        <div class="hero-bg" style="background-image: url('assets/hero.png');"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-tag reveal">Picún Leufú, Neuquén</span>
+            <p class="hero-desc reveal" style="margin-top: 120px; font-weight: 500; font-size: 1.3rem;">Donde el estilo se convierte en arte.</p>
+            <a href="#booking-section" class="btn-primary reveal btn-trigger-booking" id="hero-cta">
+                Reservá tu turno
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ======== ABOUT ======== -->
+    <section id="about" class="section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image reveal">
+                    <img src="assets/about.png" alt="Barbería Imperio — Interior" loading="lazy">
+                </div>
+                <div class="about-text reveal">
+                    <span class="label">Nuestra Historia</span>
+                    <h2 class="heading-lg">De cortes a domicilio a nuestro propio local.</h2>
+                    <p>Todo empezó con un maletín, unas tijeras y Cristian recorriendo las calles de Picún Leufú para cortar a domicilio. Con esfuerzo, pasión y la confianza de cada vecino, ese sueño fue creciendo hasta que pudimos dar el salto y abrir las puertas de nuestro propio local físico.</p>
+                    <p>Hoy, junto a Blas, **Barbería Imperio** es nuestro lugar de encuentro. No buscamos ser una gran cadena fría de ciudad. Nos apasiona la calidez del pueblo: charlar, compartir unos mates y asegurarnos de que cada cliente se vaya sintiendo cómodo y conforme con su estilo.</p>
+                    <p>Te esperamos en **María de Churrarin 18**, Picún Leufú. Pasá, sentate y sentite como en casa.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== SERVICES ======== -->
+    <section id="services" class="section section-alt">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="label">Qué hacemos</span>
+                <h2 class="heading-lg">Servicios</h2>
+            </div>
+            <div class="services-grid">
+                <div class="service-card reveal">
+                    <div class="service-card-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.42 9.42L14 18m-4.79-4.79L4.5 19.5M9.21 13.21L12 16m6.58-6.58L10 1M19.5 4.5L14 10"/><circle cx="18.5" cy="5.5" r="2.5"/></svg>
+                    </div>
+                    <div>
+                        <h3>Corte de pelo</h3>
+                        <p>Corte personalizado, adaptado a tu estilo y tipo de pelo.</p>
+                    </div>
+                    <span class="service-price">$20.000</span>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-card-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg>
+                    </div>
+                    <div>
+                        <h3>Fade & Degradado</h3>
+                        <p>Low, mid o high fade. Líneas limpias y transiciones perfectas.</p>
+                    </div>
+                    <span class="service-price">$20.000</span>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-card-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3v18M18 3v18M6 12h12M6 6h12M6 18h12"/></svg>
+                    </div>
+                    <div>
+                        <h3>Corte + Barba</h3>
+                        <p>El combo completo. Corte de pelo más perfilado de barba con líneas definidas.</p>
+                    </div>
+                    <span class="service-price">$25.000</span>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-card-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-3 2.5-8 10-8s10 5 10 8"/><path d="M7 12c0 1.5 2 5 5 5s5-3.5 5-5"/></svg>
+                    </div>
+                    <div>
+                        <h3>Diseño de cejas</h3>
+                        <p>Perfilado de cejas para un look limpio y definido.</p>
+                    </div>
+                    <span class="service-price">Consultá</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== GALLERY ======== -->
+    <section id="gallery" class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="label">Nuestro trabajo</span>
+                <h2 class="heading-lg">Galería</h2>
+            </div>
+            <div class="gallery-grid reveal">
+                <div class="gallery-item gallery-tall">
+                    <img src="assets/haircut1.png" alt="Fade terminado" loading="lazy">
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/about.png" alt="Barbería interior" loading="lazy">
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/waiting_area.png" alt="Sala de espera" loading="lazy">
+                </div>
+                <div class="gallery-item gallery-tall">
+                    <img src="assets/haircut3.png" alt="Corte y diseño" loading="lazy">
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/haircut2.png" alt="Corte con degradado" loading="lazy">
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/about.png" alt="Interior local" loading="lazy">
+                </div>
+            </div>
+            <div class="gallery-ig reveal">
+                <p>Más trabajos en nuestro Instagram →</p>
+                <a href="https://www.instagram.com/barberiaimperio_picun/" target="_blank" rel="noopener noreferrer">@barberiaimperio_picun</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== TEAM ======== -->
+    <section id="team" class="section section-alt">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="label">El equipo</span>
+                <h2 class="heading-lg">Los barberos</h2>
+            </div>
+            <div class="team-grid">
+                <div class="team-card reveal">
+                    <div class="team-photo">
+                        <img src="assets/barber1.png" alt="Cristian Levio — Mele" loading="lazy">
+                    </div>
+                    <div class="team-info">
+                        <h3>Cristian Levio</h3>
+                        <span class="team-nick">"Mele"</span>
+                        <span class="team-role">Barbero</span>
+                    </div>
+                </div>
+                <div class="team-card reveal">
+                    <div class="team-photo">
+                        <img src="assets/barber2.png" alt="Blas Levio — Tato" loading="lazy">
+                    </div>
+                    <div class="team-info">
+                        <h3>Blas Levio</h3>
+                        <span class="team-nick">"Tato"</span>
+                        <span class="team-role">Barbero</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== PRICING ======== -->
+    <section id="pricing" class="section">
+        <div class="container container-sm">
+            <div class="section-header reveal">
+                <span class="label">Precios</span>
+                <h2 class="heading-lg">Tarifas</h2>
+            </div>
+            <div class="price-list reveal">
+                <div class="price-item">
+                    <div class="price-name">
+                        <h3>Corte de pelo</h3>
+                        <p>Clásico, moderno o fade</p>
+                    </div>
+                    <div class="price-dots"></div>
+                    <span class="price-value">$20.000</span>
+                </div>
+                <div class="price-item featured">
+                    <div class="price-name">
+                        <h3>Corte + Barba</h3>
+                        <p>El combo más pedido</p>
+                    </div>
+                    <div class="price-dots"></div>
+                    <span class="price-value">$25.000</span>
+                </div>
+                <div class="price-item">
+                    <div class="price-name">
+                        <h3>Diseño de cejas</h3>
+                        <p>Perfilado con navaja</p>
+                    </div>
+                    <div class="price-dots"></div>
+                    <span class="price-value">Consultá</span>
+                </div>
+            </div>
+            <div class="pricing-cta reveal">
+                <a href="#booking-section" class="btn-primary btn-trigger-booking">
+                    Reservá tu turno ya
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== BOOKING SECTION ======== -->
+    <section id="booking-section" class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="label">Reserva Directa</span>
+                <h2 class="heading-lg">Sacá tu turno online</h2>
+            </div>
+            
+            <div class="booking-wrapper reveal">
+                <!-- CLIENT VIEW -->
+                <div class="booking-form-card">
+                    <form id="booking-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="book-service">Servicio</label>
+                                <select id="book-service" required>
+                                    <option value="" disabled selected>Seleccioná un servicio</option>
+                                    <option value="Corte de pelo" data-price="20000">Corte de pelo ($20.000)</option>
+                                    <option value="Corte + Barba" data-price="25000">Corte + Barba ($25.000)</option>
+                                    <option value="Diseño de cejas" data-price="3000">Diseño de cejas ($3.000)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-barber">Barbero</label>
+                                <select id="book-barber" required>
+                                    <option value="Cualquiera" selected>Cualquiera disponible</option>
+                                    <option value="Cristian Levio (Mele)">Cristian Levio (Mele)</option>
+                                    <option value="Blas Levio (Tato)">Blas Levio (Tato)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="book-date">Fecha</label>
+                                <input type="date" id="book-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-time">Horario</label>
+                                <select id="book-time" required disabled>
+                                    <option value="" disabled selected>Elegí una fecha primero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="book-name">Tu Nombre</label>
+                                <input type="text" id="book-name" placeholder="Ej: Juan Pérez" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-phone">Tu Celular / WhatsApp</label>
+                                <input type="tel" id="book-phone" placeholder="Ej: 2942461948" required>
+                            </div>
+                        </div>
+
+                        <div class="booking-summary" id="booking-summary" style="display: none;">
+                            <p><strong>Resumen de tu Turno:</strong></p>
+                            <p id="summary-text"></p>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;">
+                            <span>Confirmar Turno Directo</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ADMIN TOGGLE (FOR BARBERS Cristian & Tato) -->
+                <div class="booking-admin-section">
+                    <button class="btn-admin-toggle" id="btn-admin-toggle">Acceso Barberos 🔑</button>
+                    
+                    <div id="admin-panel" class="admin-panel" style="display: none;">
+                        <h3>Turnos Reservados</h3>
+                        <div class="admin-filters">
+                            <button class="filter-btn active" data-barber="Todos">Todos</button>
+                            <button class="filter-btn" data-barber="Cristian Levio (Mele)">Cristian (Mele)</button>
+                            <button class="filter-btn" data-barber="Blas Levio (Tato)">Blas (Tato)</button>
+                        </div>
+                        <div class="appointments-list" id="appointments-list">
+                            <p class="no-appts">No hay turnos agendados para esta fecha.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== CONTACT ======== -->
+    <section id="contact" class="section section-alt">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="label">Contacto</span>
+                <h2 class="heading-lg">Vení a visitarnos</h2>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-form-wrap reveal">
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-group">
+                            <label for="name">Nombre</label>
+                            <input type="text" id="name" name="name" placeholder="Tu nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">WhatsApp</label>
+                            <input type="tel" id="phone" name="phone" placeholder="294 ..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Mensaje</label>
+                            <textarea id="message" name="message" rows="3" placeholder="¿Qué servicio te interesa?"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" id="form-submit">
+                            <span>Enviar consulta</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="contact-info reveal">
+                    <div class="info-block">
+                        <h4>Dirección</h4>
+                        <p>María de Churrarin 18<br>Picún Leufú, Neuquén</p>
+                    </div>
+                    <div class="info-block">
+                        <h4>WhatsApp</h4>
+                        <p><a href="https://wa.me/5492942461948" target="_blank">294 246-1948</a></p>
+                    </div>
+                    <div class="info-block">
+                        <h4>Horarios</h4>
+                        <p>Lunes a Sábado<br>9:00 – 13:00 · 17:00 – 22:00</p>
+                    </div>
+                    <div class="info-block">
+                        <h4>Instagram</h4>
+                        <p><a href="https://www.instagram.com/barberiaimperio_picun/" target="_blank">@barberiaimperio_picun</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== FOOTER ======== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="assets/logo.png" alt="Barbería Imperio" class="footer-logo">
+                    <p>Tu barbería de confianza en Picún Leufú.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#about">Nosotros</a>
+                    <a href="#services">Servicios</a>
+                    <a href="#pricing">Precios</a>
+                    <a href="#contact">Contacto</a>
+                </div>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/barberiaimperio_picun/" target="_blank" aria-label="Instagram">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    </a>
+                    <a href="https://wa.me/5492942461948" target="_blank" aria-label="WhatsApp">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Barbería Imperio — Picún Leufú, Neuquén</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Float -->
+    <a href="https://wa.me/5492942461948?text=Hola!%20Quiero%20reservar%20un%20turno" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+
+    <!-- Back to top -->
+    <button class="back-to-top" id="back-to-top" aria-label="Volver arriba">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
