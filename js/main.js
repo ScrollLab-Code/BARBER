@@ -95,6 +95,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  // --- SECURITY: INPUT SANITIZATION UTILITY ---
+  const sanitizeHTML = (str) => {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, (match) => {
+      const escapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;'
+      };
+      return escapeMap[match];
+    });
+  };
+
   // --- Form handling ---
   const form = document.querySelector('.contact-form');
 
@@ -167,6 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const selectedBarber = bookBarber.value;
       
       let appointments = [];
+      let blocks = JSON.parse(localStorage.getItem('barber_blocks') || '[]');
+
       if (supabase) {
         try {
           const { data, error } = await supabase
@@ -185,26 +202,59 @@ document.addEventListener('DOMContentLoaded', () => {
         appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
       }
 
-      // Filter slots already taken
+      // Filter slots already taken or manually blocked
       bookTime.innerHTML = '<option value="" disabled selected>Seleccioná un horario</option>';
       
+      let availableCount = 0;
       slots.forEach(slot => {
+        // Check if slot is taken by a booking
         const isTaken = appointments.some(appt => 
           appt.date === selectedDate && 
           appt.time === slot && 
           (selectedBarber === 'Cualquiera' || appt.barber === selectedBarber || appt.barber === 'Cualquiera')
         );
 
+        // Check if slot is blocked by admin
+        const isBlocked = blocks.some(b => 
+          b.date === selectedDate && 
+          (b.time === 'Todo el dia' || b.time === slot) &&
+          (b.barber === 'Ambos' || selectedBarber === 'Cualquiera' || b.barber === selectedBarber)
+        );
+
+        const isUnavailable = isTaken || isBlocked;
+
+        if (!isUnavailable) availableCount++;
+
         const option = document.createElement('option');
         option.value = slot;
-        option.textContent = slot + (isTaken ? ' (Ocupado)' : '');
-        if (isTaken) {
+        option.textContent = slot + (isTaken ? ' (Ocupado)' : isBlocked ? ' (Bloqueado)' : '');
+        if (isUnavailable) {
           option.disabled = true;
         }
         bookTime.appendChild(option);
       });
 
       bookTime.disabled = false;
+
+      // Update Availability Banner
+      const statusBanner = document.getElementById('booking-availability-status');
+      const submitBtn = document.getElementById('btn-submit-booking');
+
+      if (statusBanner && submitBtn) {
+        statusBanner.style.display = 'block';
+        if (availableCount === 0) {
+          statusBanner.className = 'availability-status danger';
+          statusBanner.textContent = '❌ Sin turnos disponibles para esta fecha. Probá con otro día.';
+          submitBtn.disabled = true;
+        } else if (availableCount > 0 && availableCount < 5) {
+          statusBanner.className = 'availability-status warning';
+          statusBanner.textContent = `⚠️ ¡Últimos turnos disponibles! Quedan solo ${availableCount} lugares.`;
+          submitBtn.disabled = false;
+        } else {
+          statusBanner.style.display = 'none';
+          submitBtn.disabled = false;
+        }
+      }
     });
 
     bookBarber.addEventListener('change', () => {
@@ -238,12 +288,12 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
 
       const newAppt = {
-        service: bookService.value,
-        barber: bookBarber.value === 'Cualquiera' ? (Math.random() > 0.5 ? 'Cristian Levio (Mele)' : 'Blas Levio (Tato)') : bookBarber.value,
-        date: bookDate.value,
-        time: bookTime.value,
-        name: document.getElementById('book-name').value,
-        phone: document.getElementById('book-phone').value
+        service: sanitizeHTML(bookService.value),
+        barber: bookBarber.value === 'Cualquiera' ? (Math.random() > 0.5 ? 'Cristian Levio (Mele)' : 'Blas Levio (Tato)') : sanitizeHTML(bookBarber.value),
+        date: sanitizeHTML(bookDate.value),
+        time: sanitizeHTML(bookTime.value),
+        name: sanitizeHTML(document.getElementById('book-name').value.trim()),
+        phone: sanitizeHTML(document.getElementById('book-phone').value.trim().replace(/[^\d+]/g, ''))
       };
 
       if (supabase) {
@@ -282,11 +332,58 @@ document.addEventListener('DOMContentLoaded', () => {
         bookTime.innerHTML = '<option value="" disabled selected>Elegí una fecha primero</option>';
         bookingSummary.style.display = 'none';
         
+        // Refresh availability
+        const statusBanner = document.getElementById('booking-availability-status');
+        if (statusBanner) statusBanner.style.display = 'none';
+
         // Refresh admin dashboard list if visible
         renderAppointments();
       }, 3000);
     });
   }
+
+  // --- AUDIO ALERT NOTIFICATION SYSTEM (Web Audio API Synth) ---
+  let lastAppointmentCount = -1;
+  let pollInterval = null;
+
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // First Note
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.15);
+
+      // Second Note (Harmonious chord delay)
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+        gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 0.3);
+      }, 100);
+
+    } catch (err) {
+      console.warn("Web Audio API not allowed or supported yet", err);
+    }
+  };
 
   // --- BARBER ADMIN DASHBOARD ---
   if (btnAdminToggle && adminPanel) {
@@ -297,12 +394,81 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = prompt('Por favor, ingresá la contraseña de barbero:');
         if (password === 'imperio18') {
           adminPanel.style.display = 'block';
+          populateBlockTimes();
           renderAppointments();
+          
+          // Start background poller for new bookings (every 8 seconds)
+          lastAppointmentCount = -1; // Reset to avoid double triggers on opening
+          pollInterval = setInterval(async () => {
+            await renderAppointments(true); // true signals a silent poll check
+          }, 8000);
+
         } else if (password !== null) {
           alert('Contraseña incorrecta. Acceso denegado.');
         }
       } else {
         adminPanel.style.display = 'none';
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      }
+    });
+  }
+
+  // Populate block times options
+  const populateBlockTimes = () => {
+    const blockTimeSelect = document.getElementById('block-time');
+    if (!blockTimeSelect) return;
+    
+    // Clear dynamic but keep "Todo el dia"
+    blockTimeSelect.innerHTML = '<option value="Todo el dia">Todo el día</option>';
+    
+    const fakeDate = '2026-01-01'; // Just to generate standard slots
+    const slots = generateTimeSlots(fakeDate);
+    
+    slots.forEach(slot => {
+      const opt = document.createElement('option');
+      opt.value = slot;
+      opt.textContent = slot + ' hs';
+      blockTimeSelect.appendChild(opt);
+    });
+  };
+
+  // Handle Apply Block
+  const btnApplyBlock = document.getElementById('btn-apply-block');
+  if (btnApplyBlock) {
+    btnApplyBlock.addEventListener('click', () => {
+      const dateVal = document.getElementById('block-date').value;
+      const timeVal = document.getElementById('block-time').value;
+      const barberVal = document.getElementById('block-barber').value;
+
+      if (!dateVal) {
+        alert('Por favor, seleccioná una fecha para bloquear.');
+        return;
+      }
+
+      const blocks = JSON.parse(localStorage.getItem('barber_blocks') || '[]');
+      const newBlock = {
+        id: Date.now().toString(),
+        isBlock: true,
+        name: `BLOQUEADO (${sanitizeHTML(timeVal)})`,
+        phone: 'N/A',
+        service: 'Bloqueo Manual',
+        barber: sanitizeHTML(barberVal),
+        date: sanitizeHTML(dateVal),
+        time: sanitizeHTML(timeVal)
+      };
+
+      blocks.push(newBlock);
+      localStorage.setItem('barber_blocks', JSON.stringify(blocks));
+      alert(`Horario bloqueado con éxito para el día ${dateVal}.`);
+      
+      renderAppointments();
+      
+      // Update client calendar immediately if open
+      if (bookDate.value) {
+        bookDate.dispatchEvent(new Event('change'));
       }
     });
   }
@@ -319,11 +485,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  const renderAppointments = async () => {
+  const renderAppointments = async (isPoll = false) => {
     if (!appointmentsList) return;
     
     let appointments = [];
     
+    // Load bookings
     if (supabase) {
       try {
         const { data, error } = await supabase
@@ -340,20 +507,33 @@ document.addEventListener('DOMContentLoaded', () => {
       appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
     }
 
-    // Sort appointments chronologically by date and time
-    appointments.sort((a, b) => {
+    // Trigger Sound Alert if list count increased
+    if (lastAppointmentCount !== -1 && appointments.length > lastAppointmentCount) {
+      playNotificationSound();
+    }
+    lastAppointmentCount = appointments.length;
+
+    // Load blocks and merge
+    const blocks = JSON.parse(localStorage.getItem('barber_blocks') || '[]');
+    const mergedList = [...appointments, ...blocks];
+
+    // Sort chronologically by date and time
+    mergedList.sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       return a.time.localeCompare(b.time);
     });
 
     // Filter appointments
-    const filtered = appointments.filter(appt => {
+    const filtered = mergedList.filter(appt => {
       if (currentFilter === 'Todos') return true;
+      if (appt.isBlock) {
+        return appt.barber === 'Ambos' || appt.barber === currentFilter;
+      }
       return appt.barber === currentFilter;
     });
 
     if (filtered.length === 0) {
-      appointmentsList.innerHTML = '<p class="no-appts">No hay turnos agendados para este barbero.</p>';
+      appointmentsList.innerHTML = '<p class="no-appts">No hay turnos agendados ni bloqueos para este barbero.</p>';
       return;
     }
 
@@ -361,43 +541,69 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered.forEach(appt => {
       const card = document.createElement('div');
       card.className = 'appt-card';
+      
       const keyId = appt.id ? appt.id : `${appt.date}-${appt.time}-${appt.name}`;
-      card.innerHTML = `
-        <div class="appt-info">
-          <h4>${appt.name}</h4>
-          <p>📞 Cel: ${appt.phone} | 💈 ${appt.service}</p>
-          <p>📅 <strong>${appt.date}</strong> a las <strong>${appt.time} hs</strong> | 👤 Barbero: ${appt.barber}</p>
-        </div>
-        <div class="appt-actions">
-          <button class="btn-delete-appt" data-id="${keyId}">Cancelar Turno</button>
-        </div>
-      `;
+      
+      if (appt.isBlock) {
+        card.innerHTML = `
+          <div class="appt-info" style="opacity: 0.7;">
+            <h4 style="color: #ff5252;">🚫 HORARIO BLOQUEADO</h4>
+            <p>Barbero: ${appt.barber}</p>
+            <p>📅 <strong>${appt.date}</strong> a las <strong>${appt.time} hs</strong></p>
+          </div>
+          <div class="appt-actions">
+            <button class="btn-delete-appt btn-unblock" data-id="${appt.id}" style="color: var(--gold); border-color: var(--gold);">Desbloquear</button>
+          </div>
+        `;
+      } else {
+        // Build pre-formatted WhatsApp Message text for the notification
+        const waText = encodeURIComponent(`Hola ${appt.name}! Te escribimos de Barbería Imperio para recordarte tu turno del día ${appt.date} a las ${appt.time} hs para un ${appt.service}. ¡Te esperamos!`);
+        
+        card.innerHTML = `
+          <div class="appt-info">
+            <h4>${appt.name}</h4>
+            <p>📞 Cel: ${appt.phone} | 💈 ${appt.service}</p>
+            <p>📅 <strong>${appt.date}</strong> a las <strong>${appt.time}</strong> | 👤 ${appt.barber}</p>
+          </div>
+          <div class="appt-actions">
+            <a href="https://wa.me/549${appt.phone}?text=${waText}" target="_blank" class="btn-send-whatsapp">Recordar 📱</a>
+            <button class="btn-delete-appt" data-id="${keyId}">Cancelar</button>
+          </div>
+        `;
+      }
       appointmentsList.appendChild(card);
     });
 
-    // Delete appointment handler
+    // Delete / Unblock appointment handler
     appointmentsList.querySelectorAll('.btn-delete-appt').forEach(btn => {
       btn.addEventListener('click', async () => {
         const keyId = btn.dataset.id;
         
-        if (supabase) {
-          try {
-            // If it's an integer key or UUID from Supabase
-            const { error } = await supabase
-              .from('barber_appointments')
-              .delete()
-              .eq('id', keyId);
-            if (error) throw error;
-          } catch (err) {
-            console.error("Error deleting from Supabase, using LocalStorage fallback", err);
+        if (btn.classList.contains('btn-unblock')) {
+          // Unblock local block
+          let blocks = JSON.parse(localStorage.getItem('barber_blocks') || '[]');
+          blocks = blocks.filter(b => b.id !== keyId);
+          localStorage.setItem('barber_blocks', JSON.stringify(blocks));
+        } else {
+          // Cancel booking
+          if (supabase) {
+            try {
+              const { error } = await supabase
+                .from('barber_appointments')
+                .delete()
+                .eq('id', keyId);
+              if (error) throw error;
+            } catch (err) {
+              console.error("Error deleting from Supabase, using LocalStorage fallback", err);
+              let appts = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+              appts = appts.filter(a => a.id !== keyId);
+              localStorage.setItem('barber_appointments', JSON.stringify(appts));
+            }
+          } else {
             let appts = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
             appts = appts.filter(a => a.id !== keyId);
             localStorage.setItem('barber_appointments', JSON.stringify(appts));
           }
-        } else {
-          let appts = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
-          appts = appts.filter(a => a.id !== keyId);
-          localStorage.setItem('barber_appointments', JSON.stringify(appts));
         }
 
         renderAppointments();

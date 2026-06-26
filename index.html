@@ -207,6 +207,9 @@
             </div>
             
             <div class="booking-wrapper reveal">
+                <!-- AVAILABILITY STATUS BANNER -->
+                <div class="availability-status" id="booking-availability-status" style="display: none;"></div>
+
                 <!-- CLIENT VIEW -->
                 <div class="booking-form-card">
                     <form id="booking-form">
@@ -259,7 +262,7 @@
                             <p id="summary-text"></p>
                         </div>
 
-                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;">
+                        <button type="submit" class="btn-primary" id="btn-submit-booking" style="width: 100%; justify-content: center; margin-top: 16px;">
                             <span>Confirmar Turno Directo</span>
                         </button>
                     </form>
@@ -270,6 +273,40 @@
                     <button class="btn-admin-toggle" id="btn-admin-toggle">Acceso Barberos 🔑</button>
                     
                     <div id="admin-panel" class="admin-panel" style="display: none;">
+                        <h3>Panel Administrativo</h3>
+                        
+                        <!-- BLOCK HORARIOS SYSTEM -->
+                        <div class="admin-block-section" style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border);">
+                            <h4>Bloquear Horarios Especiales 🚫</h4>
+                            <div class="form-row" style="margin-top: 12px;">
+                                <div class="form-group">
+                                    <label for="block-date">Fecha a Bloquear</label>
+                                    <input type="date" id="block-date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="block-time">Horario a Bloquear</label>
+                                    <select id="block-time">
+                                        <option value="Todo el dia">Todo el día</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="block-barber">Barbero Involucrado</label>
+                                    <select id="block-barber">
+                                        <option value="Ambos">Ambos Barberos</option>
+                                        <option value="Cristian Levio (Mele)">Cristian Levio (Mele)</option>
+                                        <option value="Blas Levio (Tato)">Blas Levio (Tato)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <button type="button" id="btn-apply-block" class="btn-primary" style="width: 100%; justify-content: center;">
+                                        Bloquear Turno
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <h3>Turnos Reservados</h3>
                         <div class="admin-filters">
                             <button class="filter-btn active" data-barber="Todos">Todos</button>
