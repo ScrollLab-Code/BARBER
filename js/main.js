@@ -195,6 +195,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const selectedDate = bookDate.value;
       if (!selectedDate) return;
 
+      // Check if selected date is Sunday (0)
+      const parts = selectedDate.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const dateObj = new Date(year, month, day);
+
+      if (dateObj.getDay() === 0) {
+        alert("Los domingos la barbería se encuentra cerrada. Por favor, seleccioná otro día de lunes a sábado.");
+        bookDate.value = "";
+        bookTime.disabled = true;
+        bookTime.innerHTML = '<option value="" disabled selected>Elegí una fecha primero</option>';
+        bookingSummary.style.display = 'none';
+        const statusBanner = document.getElementById('booking-availability-status');
+        if (statusBanner) statusBanner.style.display = 'none';
+        return;
+      }
+
       const slots = generateTimeSlots(selectedDate);
       const selectedBarber = bookBarber.value;
       
@@ -462,6 +480,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (bookingForm) {
     bookingForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const nameVal = document.getElementById('book-name').value.trim();
+      const words = nameVal.split(/\s+/).filter(w => w.length > 0);
+      if (words.length > 3) {
+        alert("Por favor, ingresá como máximo 3 palabras en el nombre (ejemplo: Nombre y Apellidos).");
+        return;
+      }
 
       const newAppt = {
         service: sanitizeHTML(bookService.value),
