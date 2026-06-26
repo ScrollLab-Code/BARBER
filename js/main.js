@@ -1,5 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // --- Date Formatter Utility ---
+  const formatDateToLetters = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    let formatted = new Intl.DateTimeFormat('es-ES', options).format(date);
+    if (formatted) {
+      formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }
+    return formatted;
+  };
+
   // --- Supabase Config & Fallback Setup ---
   // Reemplazar con tus credenciales reales de Supabase:
   const SUPABASE_URL = ""; 
@@ -418,29 +435,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Populate block times options
   const populateBlockTimes = () => {
-    const blockTimeSelect = document.getElementById('block-time');
-    if (!blockTimeSelect) return;
+    const blockStart = document.getElementById('block-time-start');
+    const blockEnd = document.getElementById('block-time-end');
+    if (!blockStart || !blockEnd) return;
     
     // Clear dynamic but keep "Todo el dia"
-    blockTimeSelect.innerHTML = '<option value="Todo el dia">Todo el día</option>';
+    blockStart.innerHTML = '<option value="Todo el dia">Todo el día</option>';
+    blockEnd.innerHTML = '<option value="Todo el dia">Todo el día</option>';
     
     const fakeDate = '2026-01-01'; // Just to generate standard slots
     const slots = generateTimeSlots(fakeDate);
     
     slots.forEach(slot => {
-      const opt = document.createElement('option');
-      opt.value = slot;
-      opt.textContent = slot + ' hs';
-      blockTimeSelect.appendChild(opt);
+      const opt1 = document.createElement('option');
+      opt1.value = slot;
+      opt1.textContent = slot + ' hs';
+      blockStart.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = slot;
+      opt2.textContent = slot + ' hs';
+      blockEnd.appendChild(opt2);
+    });
+
+    // Handle "Todo el dia" dependency
+    blockStart.addEventListener('change', () => {
+      if (blockStart.value === 'Todo el dia') {
+        blockEnd.value = 'Todo el dia';
+        blockEnd.disabled = true;
+      } else {
+        blockEnd.disabled = false;
+        // Pre-select next slot
+        const startIndex = slots.indexOf(blockStart.value);
+        if (startIndex !== -1 && startIndex < slots.length - 1) {
+          blockEnd.value = slots[startIndex + 1];
+        }
+      }
     });
   };
 
-  // Handle Apply Block
+  // Handle Apply Block Range
   const btnApplyBlock = document.getElementById('btn-apply-block');
   if (btnApplyBlock) {
     btnApplyBlock.addEventListener('click', () => {
       const dateVal = document.getElementById('block-date').value;
-      const timeVal = document.getElementById('block-time').value;
+      const startVal = document.getElementById('block-time-start').value;
+      const endVal = document.getElementById('block-time-end').value;
       const barberVal = document.getElementById('block-barber').value;
 
       if (!dateVal) {
@@ -449,20 +489,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const blocks = JSON.parse(localStorage.getItem('barber_blocks') || '[]');
-      const newBlock = {
-        id: Date.now().toString(),
-        isBlock: true,
-        name: `BLOQUEADO (${sanitizeHTML(timeVal)})`,
-        phone: 'N/A',
-        service: 'Bloqueo Manual',
-        barber: sanitizeHTML(barberVal),
-        date: sanitizeHTML(dateVal),
-        time: sanitizeHTML(timeVal)
-      };
+      
+      if (startVal === 'Todo el dia') {
+        // Block whole day
+        const newBlock = {
+          id: Date.now().toString(),
+          isBlock: true,
+          name: `BLOQUEADO (Todo el día)`,
+          phone: 'N/A',
+          service: 'Bloqueo Manual',
+          barber: barberVal,
+          date: dateVal,
+          time: 'Todo el dia'
+        };
+        blocks.push(newBlock);
+      } else {
+        // Block range (generate sub-blocks for each half hour slot in range)
+        const slots = generateTimeSlots(dateVal);
+        const startIndex = slots.indexOf(startVal);
+        const endIndex = slots.indexOf(endVal);
 
-      blocks.push(newBlock);
+        if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+          alert('Rango de horarios inválido. El horario "Desde" debe ser menor que "Hasta".');
+          return;
+        }
+
+        // Loop and add blocks for each slot in the range [startIndex, endIndex]
+        for (let i = startIndex; i <= endIndex; i++) {
+          const slot = slots[i];
+          const newBlock = {
+            id: `${Date.now()}-${i}`,
+            isBlock: true,
+            name: `BLOQUEADO (${slot})`,
+            phone: 'N/A',
+            service: 'Bloqueo Manual',
+            barber: barberVal,
+            date: dateVal,
+            time: slot
+          };
+          blocks.push(newBlock);
+        }
+      }
+
       localStorage.setItem('barber_blocks', JSON.stringify(blocks));
-      alert(`Horario bloqueado con éxito para el día ${dateVal}.`);
+      alert(`Horarios bloqueados con éxito para el día ${dateVal}.`);
       
       renderAppointments();
       
@@ -537,41 +607,71 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    appointmentsList.innerHTML = '';
+    // Group items by Date key
+    const grouped = {};
     filtered.forEach(appt => {
-      const card = document.createElement('div');
-      card.className = 'appt-card';
-      
-      const keyId = appt.id ? appt.id : `${appt.date}-${appt.time}-${appt.name}`;
-      
-      if (appt.isBlock) {
-        card.innerHTML = `
-          <div class="appt-info" style="opacity: 0.7;">
-            <h4 style="color: #ff5252;">🚫 HORARIO BLOQUEADO</h4>
-            <p>Barbero: ${appt.barber}</p>
-            <p>📅 <strong>${appt.date}</strong> a las <strong>${appt.time} hs</strong></p>
-          </div>
-          <div class="appt-actions">
-            <button class="btn-delete-appt btn-unblock" data-id="${appt.id}" style="color: var(--gold); border-color: var(--gold);">Desbloquear</button>
-          </div>
-        `;
-      } else {
-        // Build pre-formatted WhatsApp Message text for the notification
-        const waText = encodeURIComponent(`Hola ${appt.name}! Te escribimos de Barbería Imperio para recordarte tu turno del día ${appt.date} a las ${appt.time} hs para un ${appt.service}. ¡Te esperamos!`);
-        
-        card.innerHTML = `
-          <div class="appt-info">
-            <h4>${appt.name}</h4>
-            <p>📞 Cel: ${appt.phone} | 💈 ${appt.service}</p>
-            <p>📅 <strong>${appt.date}</strong> a las <strong>${appt.time}</strong> | 👤 ${appt.barber}</p>
-          </div>
-          <div class="appt-actions">
-            <a href="https://wa.me/549${appt.phone}?text=${waText}" target="_blank" class="btn-send-whatsapp">Recordar 📱</a>
-            <button class="btn-delete-appt" data-id="${keyId}">Cancelar</button>
-          </div>
-        `;
+      if (!grouped[appt.date]) {
+        grouped[appt.date] = [];
       }
-      appointmentsList.appendChild(card);
+      grouped[appt.date].push(appt);
+    });
+
+    appointmentsList.innerHTML = '';
+
+    // Render grouped lists sorted by date
+    Object.keys(grouped).sort().forEach(date => {
+      // Create Date Header section
+      const dateHeader = document.createElement('div');
+      dateHeader.className = 'date-group-header';
+      dateHeader.innerHTML = `<h4 style="margin: 24px 0 12px; color: var(--gold); border-bottom: 1px solid var(--border); padding-bottom: 6px; font-size: 1.1rem;">📅 Fecha: ${date}</h4>`;
+      appointmentsList.appendChild(dateHeader);
+
+      grouped[date].forEach(appt => {
+        const card = document.createElement('div');
+        card.className = 'appt-card';
+        card.style.marginBottom = '8px';
+        
+        const keyId = appt.id ? appt.id : `${appt.date}-${appt.time}-${appt.name}`;
+        
+        if (appt.isBlock) {
+          card.innerHTML = `
+            <div class="appt-info" style="flex: 1; opacity: 0.7; padding-right: 16px;">
+              <h4 style="color: #ff5252; font-size: 1rem; font-weight: 700; margin-bottom: 4px;">🚫 HORARIO BLOQUEADO</h4>
+              <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-muted); line-height: 1; margin: 4px 0;">${appt.time} hs</div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-transform: capitalize;">📅 ${formatDateToLetters(appt.date)}</div>
+              <p style="font-size: 0.8rem; margin-top: 4px;">👤 Barbero: ${appt.barber}</p>
+            </div>
+            <div class="appt-actions">
+              <button class="btn-delete-appt btn-unblock" data-id="${appt.id}" style="color: var(--gold); border-color: var(--gold);">Desbloquear</button>
+            </div>
+          `;
+        } else {
+          // Build pre-formatted WhatsApp Message text for the notification
+          const waText = encodeURIComponent(`Hola ${appt.name}! Te escribimos de Barbería Imperio para recordarte tu turno del día ${appt.date} a las ${appt.time} hs para un ${appt.service}. ¡Te esperamos!`);
+          
+          card.innerHTML = `
+            <div class="appt-info" style="flex: 1; padding-right: 16px;">
+              <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 2px;">Cliente</div>
+              <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--white); margin: 0 0 6px 0;">${appt.name}</h4>
+              
+              <div style="font-size: 2.2rem; font-weight: 800; color: var(--gold); line-height: 1; margin: 6px 0;">${appt.time} hs</div>
+              
+              <div style="font-size: 0.95rem; font-weight: 600; color: var(--text); text-transform: capitalize; margin-bottom: 8px;">📅 ${formatDateToLetters(appt.date)}</div>
+              
+              <div style="font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 6px; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 12px;">
+                <span>💈 ${appt.service}</span>
+                <span>👤 Barbero: ${appt.barber}</span>
+                <span>📞 Cel: ${appt.phone}</span>
+              </div>
+            </div>
+            <div class="appt-actions" style="display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: flex-end;">
+              <a href="https://wa.me/549${appt.phone}?text=${waText}" target="_blank" class="btn-send-whatsapp">Recordar 📱</a>
+              <button class="btn-delete-appt" data-id="${keyId}">Cancelar</button>
+            </div>
+          `;
+        }
+        appointmentsList.appendChild(card);
+      });
     });
 
     // Delete / Unblock appointment handler
@@ -616,4 +716,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 });
-
