@@ -496,9 +496,12 @@ document.addEventListener('DOMContentLoaded', () => {
         newAppt.id = Date.now().toString(); // Fallback ID
         if (supabase) {
           try {
+            const supabasePayload = { ...newAppt };
+            delete supabasePayload.id;
+
             const { data, error } = await supabase
               .from('barber_appointments')
-              .insert([newAppt])
+              .insert([supabasePayload])
               .select();
             if (error) {
               alert("Error de Supabase (Reserva):\n" + error.message + "\nDetalle: " + error.details);
