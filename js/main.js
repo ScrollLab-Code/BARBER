@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Supabase Config & Fallback Setup ---
   // Reemplazar con tus credenciales reales de Supabase:
-  const SUPABASE_URL = ""; 
-  const SUPABASE_ANON_KEY = "";
+  const SUPABASE_URL = "https://iudoirkbcpubjqdqgnle.supabase.co/"; 
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1ZG9pcmtiY3B1YmpxZHFnbmxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MzQ3NjAsImV4cCI6MjA5ODAxMDc2MH0.6euPZyzIDKiRjk_0qQdVy6rzcophZ3ib-AuyQHCWIWE";
   
   let supabase = null;
   if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined') {
