@@ -299,6 +299,161 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('change', updateSummary);
   });
 
+  // --- CLIENT RESERVATIONS DISPLAY SYSTEM ---
+  let reschedulingId = null;
+
+  const renderClientAppointments = async () => {
+    const section = document.getElementById('client-appointments-section');
+    const listContainer = document.getElementById('client-appts-list');
+    if (!section || !listContainer) return;
+
+    let clientReservationIds = JSON.parse(localStorage.getItem('client_reservations') || '[]');
+    if (clientReservationIds.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    let appointments = [];
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('barber_appointments').select('*');
+        if (!error && data) {
+          appointments = data;
+        }
+      } catch (err) {
+        console.error("Error reading client appointments from Supabase", err);
+        appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+      }
+    } else {
+      appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Filter active future/today reservations that match our stored client ids
+    const activeReservations = appointments.filter(appt => 
+      clientReservationIds.includes(appt.id) && appt.date >= todayStr
+    );
+
+    if (activeReservations.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    listContainer.innerHTML = '';
+    section.style.display = 'block';
+
+    // Sort chronologically
+    activeReservations.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.time.localeCompare(b.time);
+    });
+
+    activeReservations.forEach(appt => {
+      const card = document.createElement('div');
+      card.className = 'client-appt-card';
+      card.style.cssText = `
+        padding: 16px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      `;
+
+      card.innerHTML = `
+        <div style="flex: 1;">
+          <div style="font-weight: 700; color: var(--white); font-size: 0.95rem;">💈 ${appt.service}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Barbero: ${appt.barber}</div>
+          <div style="font-size: 0.9rem; color: var(--gold); font-weight: 600; text-transform: capitalize;">📅 ${formatDateToLetters(appt.date)} a las ${appt.time} hs</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-reschedule-client" data-id="${appt.id}" style="font-size: 0.75rem; color: var(--gold); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 4px; transition: 0.3s; background: transparent;">Mover 🔄</button>
+          <button class="btn-cancel-client" data-id="${appt.id}" style="font-size: 0.75rem; color: #ff5252; border: 1px solid #ff5252; padding: 4px 10px; border-radius: 4px; transition: 0.3s; background: transparent;">Cancelar ❌</button>
+        </div>
+      `;
+
+      listContainer.appendChild(card);
+    });
+
+    // Cancel appointment handler
+    listContainer.querySelectorAll('.btn-cancel-client').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (!confirm('¿Estás seguro de que deseas cancelar este turno? Esta acción no se puede deshacer.')) return;
+
+        if (supabase) {
+          try {
+            const { error } = await supabase.from('barber_appointments').delete().eq('id', id);
+            if (error) throw error;
+          } catch (err) {
+            console.error("Error canceling appointment from Supabase", err);
+            let appts = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+            appts = appts.filter(a => a.id !== id);
+            localStorage.setItem('barber_appointments', JSON.stringify(appts));
+          }
+        } else {
+          let appts = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+          appts = appts.filter(a => a.id !== id);
+          localStorage.setItem('barber_appointments', JSON.stringify(appts));
+        }
+
+        // Clean up from local reservation list
+        let ids = JSON.parse(localStorage.getItem('client_reservations') || '[]');
+        ids = ids.filter(x => x !== id);
+        localStorage.setItem('client_reservations', JSON.stringify(ids));
+
+        alert('Turno cancelado exitosamente.');
+        renderClientAppointments();
+        renderAppointments();
+        if (bookDate.value) {
+          bookDate.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+
+    // Reschedule appointment handler
+    listContainer.querySelectorAll('.btn-reschedule-client').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const appt = activeReservations.find(x => x.id === id);
+        if (!appt) return;
+
+        // Populate fields
+        bookService.value = appt.service;
+        bookBarber.value = appt.barber;
+        bookDate.value = appt.date;
+        
+        // Save rescheduling state
+        reschedulingId = id;
+
+        // Update button visual feedback to show it's updating
+        const submitBtn = document.getElementById('btn-submit-booking');
+        if (submitBtn) {
+          submitBtn.innerHTML = '<span>Guardar Cambios del Turno 💾</span>';
+          submitBtn.style.background = 'var(--gold)';
+        }
+
+        // Trigger date change to populate slots and scroll to form
+        bookDate.dispatchEvent(new Event('change'));
+
+        document.getElementById('book-name').value = appt.name;
+        document.getElementById('book-phone').value = appt.phone;
+
+        updateSummary();
+
+        // Smooth scroll to booking form
+        const bookingSec = document.getElementById('booking-section');
+        if (bookingSec) {
+          const top = bookingSec.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      });
+    });
+  };
+
   // Handle Turn Submission
   if (bookingForm) {
     bookingForm.addEventListener('submit', async (e) => {
@@ -313,35 +468,65 @@ document.addEventListener('DOMContentLoaded', () => {
         phone: sanitizeHTML(document.getElementById('book-phone').value.trim().replace(/[^\d+]/g, ''))
       };
 
-      if (supabase) {
-        try {
-          const { error } = await supabase
-            .from('barber_appointments')
-            .insert([newAppt]);
-          if (error) throw error;
-        } catch (err) {
-          console.error("Error saving to Supabase, falling back to LocalStorage", err);
-          const appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
-          newAppt.id = Date.now().toString();
-          appointments.push(newAppt);
+      if (reschedulingId) {
+        newAppt.id = reschedulingId;
+        if (supabase) {
+          try {
+            const { error } = await supabase
+              .from('barber_appointments')
+              .update(newAppt)
+              .eq('id', reschedulingId);
+            if (error) throw error;
+          } catch (err) {
+            console.error("Error updating Supabase, using LocalStorage fallback", err);
+            let appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+            appointments = appointments.map(a => a.id === reschedulingId ? newAppt : a);
+            localStorage.setItem('barber_appointments', JSON.stringify(appointments));
+          }
+        } else {
+          let appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+          appointments = appointments.map(a => a.id === reschedulingId ? newAppt : a);
           localStorage.setItem('barber_appointments', JSON.stringify(appointments));
         }
       } else {
-        const appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
-        newAppt.id = Date.now().toString();
-        appointments.push(newAppt);
-        localStorage.setItem('barber_appointments', JSON.stringify(appointments));
+        newAppt.id = Date.now().toString(); // Fallback ID
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('barber_appointments')
+              .insert([newAppt])
+              .select();
+            if (error) throw error;
+            if (data && data[0]) {
+              newAppt.id = data[0].id;
+            }
+          } catch (err) {
+            console.error("Error saving to Supabase, falling back to LocalStorage", err);
+            const appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+            appointments.push(newAppt);
+            localStorage.setItem('barber_appointments', JSON.stringify(appointments));
+          }
+        } else {
+          const appointments = JSON.parse(localStorage.getItem('barber_appointments') || '[]');
+          appointments.push(newAppt);
+          localStorage.setItem('barber_appointments', JSON.stringify(appointments));
+        }
+
+        // Add to client reservations
+        let clientReservationIds = JSON.parse(localStorage.getItem('client_reservations') || '[]');
+        clientReservationIds.push(newAppt.id);
+        localStorage.setItem('client_reservations', JSON.stringify(clientReservationIds));
       }
 
       // Visual Success Feedback
       const submitBtn = bookingForm.querySelector('button[type="submit"]');
       const origText = submitBtn.innerHTML;
-      submitBtn.innerHTML = '<span>¡Turno Reservado con Éxito! ✓</span>';
+      submitBtn.innerHTML = reschedulingId ? '<span>¡Turno Modificado con Éxito! ✓</span>' : '<span>¡Turno Reservado con Éxito! ✓</span>';
       submitBtn.style.background = '#2e7d32';
       submitBtn.disabled = true;
 
       setTimeout(() => {
-        submitBtn.innerHTML = origText;
+        submitBtn.innerHTML = '<span>Confirmar Turno Directo</span>';
         submitBtn.style.background = '';
         submitBtn.disabled = false;
         bookingForm.reset();
@@ -349,12 +534,16 @@ document.addEventListener('DOMContentLoaded', () => {
         bookTime.innerHTML = '<option value="" disabled selected>Elegí una fecha primero</option>';
         bookingSummary.style.display = 'none';
         
+        // Reset rescheduling state
+        reschedulingId = null;
+        
         // Refresh availability
         const statusBanner = document.getElementById('booking-availability-status');
         if (statusBanner) statusBanner.style.display = 'none';
 
-        // Refresh admin dashboard list if visible
+        // Refresh lists
         renderAppointments();
+        renderClientAppointments();
       }, 3000);
     });
   }
@@ -647,7 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         } else {
           // Build pre-formatted WhatsApp Message text for the notification
-          const waText = encodeURIComponent(`Hola ${appt.name}! Te escribimos de Barbería Imperio para recordarte tu turno del día ${appt.date} a las ${appt.time} hs para un ${appt.service}. ¡Te esperamos!`);
+          const waText = encodeURIComponent(`Hola ${appt.name}! Te escribimos de Barbería Imperio para recordarte tu turno del día ${formatDateToLetters(appt.date)} a las ${appt.time} hs para un ${appt.service}. ¡Te esperamos!`);
           
           card.innerHTML = `
             <div class="appt-info" style="flex: 1; padding-right: 16px;">
@@ -715,4 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   };
+
+  // Initialize client appointments display
+  renderClientAppointments();
 });
