@@ -208,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .select('*')
             .eq('date', selectedDate);
           
+          if (error) {
+            console.error("Supabase SELECT error:", error);
+            alert("Error de Supabase (Carga de Horarios):\n" + error.message + "\nCódigo: " + error.code + "\nDetalle: " + error.details);
+          }
           if (!error && data) {
             appointments = data;
           }
@@ -496,7 +500,10 @@ document.addEventListener('DOMContentLoaded', () => {
               .from('barber_appointments')
               .insert([newAppt])
               .select();
-            if (error) throw error;
+            if (error) {
+              alert("Error de Supabase (Reserva):\n" + error.message + "\nDetalle: " + error.details);
+              throw error;
+            }
             if (data && data[0]) {
               newAppt.id = data[0].id;
             }
@@ -755,6 +762,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data, error } = await supabase
           .from('barber_appointments')
           .select('*');
+        if (error) {
+          console.error("Supabase ADMIN SELECT error:", error);
+          alert("Error de Supabase (Admin):\n" + error.message);
+        }
         if (!error && data) {
           appointments = data;
         }
